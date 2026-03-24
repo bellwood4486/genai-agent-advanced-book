@@ -61,3 +61,7 @@ cython_debug/
 
 .rag_data/
 .DS_Store
+
+# Claude
+.claude/
+
