@@ -16,7 +16,7 @@ dependencies = [
     "requests>=2.31.0",
     "langgraph>=0.2.14",
     "psycopg2-binary>=2.9.9",
-    "tavily-python>=0.3.0",
+    "langchain-tavily>=0.1.0",
     "python-dotenv>=1.1.1",
 ]
 
