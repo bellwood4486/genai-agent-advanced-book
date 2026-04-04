@@ -88,6 +88,14 @@ make apply               # terraform apply（手動）
 - `terraform apply` は自動化せず手動実行（学習目的）
 - Increment 1では `terraform init -backend=false` でバックエンドなしでvalidate
 
+## 開発フロー
+
+- 実装は **Increment単位** で進める（`docs/deployment-plan.md` の11 Incrementsに従う）
+- 1つのIncrementの実装が完了したら、**`dev` ブランチへのPR**を作成する
+- 人間がPRをレビュー・マージしてから次のIncrementへ進む
+- すでに実装済みのIncrementはこのルールの対象外
+- Python・Terraform固有の技術要素には、**理解の助けとなるコメント**を積極的に書く（言語仕様、フレームワークの仕組み、設定の意図など）
+
 ## テスト方針
 
 | 分類 | 実行タイミング | コマンド |
