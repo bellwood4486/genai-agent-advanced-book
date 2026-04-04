@@ -162,6 +162,10 @@ chapter4-prod/tests/
   - `qdrant_api_key`（デフォルト: `None` — ローカルでは不要、Cloud時に設定）
 - `src/tools/search_xyz_manual.py` — ハードコード`localhost:9200`をSettings経由に変更
 - `src/tools/search_xyz_qa.py` — ハードコード`localhost:6333`をSettings経由に変更
+- `chapter4-prod/CLAUDE.md` 作成（コマンド体系、Terraform規約、テスト実行方法、ディレクトリ構造）
+- ルート `CLAUDE.md` に chapter4-prod セクション追加
+- `chapter4-prod/.gitignore` 作成（Terraformパターン: `.terraform/`, `*.tfstate`, `*.tfstate.backup`, `*.tfvars` + Python標準）
+- `chapter4-prod/Makefile` 作成（`make test-unit`, `make test-integration`, `make test-e2e`, `make plan`, `make apply`, `make deploy` 等）
 - Terraformディレクトリ構造を作成:
   ```
   chapter4-prod/infra/
@@ -188,6 +192,10 @@ chapter4-prod/tests/
 - `chapter4-prod/src/configs.py`
 - `chapter4-prod/src/tools/search_xyz_manual.py`
 - `chapter4-prod/src/tools/search_xyz_qa.py`
+- `chapter4-prod/CLAUDE.md`（新規）
+- `CLAUDE.md`（ルート）
+- `chapter4-prod/.gitignore`（新規）
+- `chapter4-prod/Makefile`（新規）
 
 **検証**:
 ```bash
@@ -466,6 +474,48 @@ uv run pytest tests/unit/test_main.py::test_chat_stream -v
 uv run pytest tests/e2e/test_cloud_run.py::test_chat_stream -v
 ```
 - SSEレスポンスのContent-Typeが`text/event-stream`であること、`data:`行が複数返ることをhttpxのストリームAPIで確認
+
+---
+
+## クリーンアップ手順
+
+学習完了後、課金が継続しないようにリソースを削除する。依存関係の逆順でdestroyすること。
+
+### Terraform管理リソースの削除
+
+```bash
+# 依存関係を考慮した destroy 順序（モジュール指定）
+terraform -chdir=infra destroy -target=module.cloud-run
+terraform -chdir=infra destroy -target=module.ingestion    # Eventarc + Cloud Run Jobs
+terraform -chdir=infra destroy -target=module.storage      # GCSバケット（空にしてから）
+terraform -chdir=infra destroy -target=module.firestore
+terraform -chdir=infra destroy -target=module.observability
+terraform -chdir=infra destroy -target=module.networking
+terraform -chdir=infra destroy -target=module.secret-manager
+terraform -chdir=infra destroy -target=module.artifact-registry
+terraform -chdir=infra destroy -target=module.qdrant-cloud
+terraform -chdir=infra destroy -target=module.elastic-cloud
+# 最後に全体確認
+terraform -chdir=infra destroy
+```
+
+### マネージドサービスの解約
+
+| サービス | 操作 |
+|--------|------|
+| Elastic Cloud | コンソールからServerlessプロジェクト削除 → 不要ならアカウント解約 |
+| Qdrant Cloud | コンソールからクラスタ削除（Free Tierなので課金なし） |
+
+### GCP側の手動削除
+
+```bash
+# Terraform stateバケット（バージョニングされたオブジェクトも含め削除）
+gsutil -m rm -r gs://<your-tf-state-bucket>
+gcloud storage buckets delete gs://<your-tf-state-bucket>
+
+# GCPプロジェクトごと削除（最終手段 — 全リソース一括削除）
+gcloud projects delete <project-id>
+```
 
 ---
 

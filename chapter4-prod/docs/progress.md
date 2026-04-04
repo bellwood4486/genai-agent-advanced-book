@@ -23,6 +23,10 @@
 - [ ] `src/tools/search_xyz_manual.py`のlocalhost→Settings経由に変更
 - [ ] `src/tools/search_xyz_qa.py`のlocalhost→Settings経由に変更
 - [ ] Terraform `infra/`ディレクトリ構造作成（スケルトン）
+- [ ] `chapter4-prod/CLAUDE.md`作成（コマンド体系・Terraform規約・テスト実行方法）
+- [ ] ルート`CLAUDE.md`にchapter4-prodセクション追加
+- [ ] `.gitignore`作成（`.terraform/`, `*.tfstate`, `*.tfstate.backup`, `*.tfvars` + Python標準）
+- [ ] `Makefile`作成（`test-unit`, `test-integration`, `test-e2e`, `plan`, `apply`, `deploy` 等）
 - [ ] `pytest tests/unit/test_configs.py` 全通過
 - [ ] `terraform validate` 成功
 - [ ] `.github/workflows/chapter4-prod-ci.yml`作成（lint + unit test、devへのPR/push時）
@@ -104,3 +108,10 @@
 - [ ] `graph.astream()`でイベントストリーム実装
 - [ ] `pytest tests/unit/test_main.py::test_chat_stream` 通過
 - [ ] `pytest tests/e2e/test_cloud_run.py::test_chat_stream` 通過
+
+## クリーンアップ
+- [ ] `terraform destroy`（依存順: cloud-run → ingestion → storage → firestore → observability → networking → secret-manager → artifact-registry → qdrant-cloud → elastic-cloud）
+- [ ] Elastic Cloud コンソールからServerlessプロジェクト削除
+- [ ] Qdrant Cloud コンソールからクラスタ削除
+- [ ] Terraform state用GCSバケット削除
+- [ ] GCPプロジェクト削除（任意）
