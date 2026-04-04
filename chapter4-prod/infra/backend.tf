@@ -7,7 +7,7 @@
 
 terraform {
   backend "gcs" {
-    bucket = "<your-tf-state-bucket>"
+    bucket = "genai-book-ch4-helpdesk-tfstate"
     prefix = "chapter4-prod/terraform/state"
   }
 }

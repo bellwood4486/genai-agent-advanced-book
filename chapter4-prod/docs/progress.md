@@ -8,14 +8,14 @@
 ---
 
 ## Step 0: 前提準備
-- [ ] GCPプロジェクト作成
-- [ ] 課金アカウントリンク + 課金アラート設定（$10, $25, $50）
-- [ ] `gcloud auth application-default login`
-- [ ] Terraform インストール（`brew install terraform`）
-- [ ] Terraform state用GCSバケット作成（バージョニング有効）
-- [ ] Elastic Cloudアカウント作成 + APIキー取得
-- [ ] Qdrant Cloudアカウント作成 + APIキー取得
-- [ ] GitHub Secretsにサービスアカウントキー登録（GCP認証用）
+- [x] GCPプロジェクト作成（`genai-book-ch4-helpdesk`）
+- [x] 課金アカウントリンク + 課金アラート設定（$10, $25, $50）
+- [x] `gcloud auth application-default login`
+- [x] Terraform インストール（`brew install terraform`）
+- [x] Terraform state用GCSバケット作成（`genai-book-ch4-helpdesk-tfstate`、バージョニング有効）
+- [x] Elastic Cloudアカウント作成 + APIキー取得
+- [x] Qdrant Cloudアカウント作成 + APIキー取得
+- [ ] GitHub Secretsにサービスアカウントキー登録（GCP認証用）← Increment 4で対応
 
 ## Increment 1: プロジェクト雛形 + 設定リファクタ
 - [x] chapter4から`src/`, `data/`, `pyproject.toml`, `uv.lock`等をコピー
