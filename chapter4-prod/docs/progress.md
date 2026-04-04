@@ -11,25 +11,27 @@
 - [ ] GCPプロジェクト作成
 - [ ] 課金アカウントリンク + 課金アラート設定（$10, $25, $50）
 - [ ] `gcloud auth application-default login`
-- [ ] Terraform インストール
+- [ ] Terraform インストール（`brew install terraform`）
 - [ ] Terraform state用GCSバケット作成（バージョニング有効）
 - [ ] Elastic Cloudアカウント作成 + APIキー取得
 - [ ] Qdrant Cloudアカウント作成 + APIキー取得
 - [ ] GitHub Secretsにサービスアカウントキー登録（GCP認証用）
 
 ## Increment 1: プロジェクト雛形 + 設定リファクタ
-- [ ] chapter4から`src/`, `data/`, `pyproject.toml`, `uv.lock`等をコピー
-- [ ] `src/configs.py`に`elasticsearch_url`, `qdrant_url`, `qdrant_api_key`追加
-- [ ] `src/tools/search_xyz_manual.py`のlocalhost→Settings経由に変更
-- [ ] `src/tools/search_xyz_qa.py`のlocalhost→Settings経由に変更
-- [ ] Terraform `infra/`ディレクトリ構造作成（スケルトン）
-- [ ] `chapter4-prod/CLAUDE.md`作成（コマンド体系・Terraform規約・テスト実行方法）
-- [ ] ルート`CLAUDE.md`にchapter4-prodセクション追加
-- [ ] `.gitignore`作成（`.terraform/`, `*.tfstate`, `*.tfstate.backup`, `*.tfvars` + Python標準）
-- [ ] `Makefile`作成（`test-unit`, `test-integration`, `test-e2e`, `plan`, `apply`, `deploy` 等）
-- [ ] `pytest tests/unit/test_configs.py` 全通過
-- [ ] `terraform validate` 成功
-- [ ] `.github/workflows/chapter4-prod-ci.yml`作成（lint + unit test、devへのPR/push時）
+- [x] chapter4から`src/`, `data/`, `pyproject.toml`, `uv.lock`等をコピー
+- [x] `src/configs.py`に`elasticsearch_url`, `qdrant_url`, `qdrant_api_key`追加
+- [x] `src/tools/search_xyz_manual.py`のlocalhost→Settings経由に変更
+- [x] `src/tools/search_xyz_qa.py`のlocalhost→Settings経由に変更
+- [x] `src/scripts/create_index.py`のlocalhost→Settings経由に変更（重複Settingsクラスも削除）
+- [x] `src/scripts/delete_index.py`のlocalhost→Settings経由に変更
+- [x] Terraform `infra/`ディレクトリ構造作成（スケルトン）
+- [x] `chapter4-prod/CLAUDE.md`作成（コマンド体系・Terraform規約・テスト実行方法）
+- [x] ルート`CLAUDE.md`にchapter4-prodセクション追加
+- [x] `.gitignore`作成（`.terraform/`, `*.tfstate`, `*.tfstate.backup`, `*.tfvars` + Python標準）
+- [x] `Makefile`作成（`test-unit`, `test-integration`, `test-e2e`, `plan`, `apply`, `deploy` 等）
+- [x] `pytest tests/unit/test_configs.py` 全通過（5/5）
+- [x] `terraform validate` 成功
+- [x] `.github/workflows/chapter4-prod-ci.yml`作成（lint + unit test、devへのPR/push時）
 
 ## Increment 2: FastAPI + Dockerfile
 - [ ] `fastapi`, `uvicorn`を依存に追加

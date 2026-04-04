@@ -39,6 +39,17 @@ make stop.engine     # Stop Docker services
 make delete.index    # Remove search indexes
 ```
 
+### Chapter 4 Production (GCP Deployment)
+```bash
+cd chapter4-prod
+make lint              # Ruff lint
+make test-unit         # Unit tests (no external deps)
+make validate          # terraform init -backend=false + validate
+make plan              # terraform plan
+make apply             # terraform apply (manual)
+```
+See `chapter4-prod/docs/deployment-plan.md` for the full 11-increment plan and `chapter4-prod/CLAUDE.md` for detailed commands.
+
 ### Chapter 6 (arXiv Researcher)
 Uses LangGraph CLI with three graphs defined in `langgraph.json`:
 - `research_agent`, `paper_search_agent`, `paper_analyzer_agent`
