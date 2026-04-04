@@ -34,14 +34,14 @@
 - [x] `.github/workflows/chapter4-prod-ci.yml`作成（lint + unit test、devへのPR/push時）
 
 ## Increment 2: FastAPI + Dockerfile
-- [ ] `fastapi`, `uvicorn`を依存に追加
-- [ ] `src/main.py`作成（`GET /health`, `POST /v1/chat`）
-- [ ] `Dockerfile`作成（マルチステージビルド）
-- [ ] `.dockerignore`作成
-- [ ] `pytest tests/unit/test_main.py` 全通過
-- [ ] Dockerビルド成功
+- [x] `fastapi`, `uvicorn`を依存に追加
+- [x] `src/main.py`作成（`GET /health`, `POST /v1/chat`）
+- [x] `Dockerfile`作成（マルチステージビルド）
+- [x] `.dockerignore`作成
+- [x] `pytest tests/unit/test_main.py` 全通過（4/4）
+- [x] Dockerビルド成功
 - [ ] `pytest tests/integration/test_api_local.py` 全通過
-- [ ] `.github/workflows/chapter4-prod-deploy.yml`作成（Docker build & push to Artifact Registry、devへのmerge時）
+- [x] `.github/workflows/chapter4-prod-deploy.yml`作成（Docker build & push to Artifact Registry、devへのmerge時）
 
 ## Increment 3: Elastic Cloud Serverless + Qdrant Cloud（Terraform）
 - [ ] `modules/elastic-cloud/` — `ec_elasticsearch_project`定義

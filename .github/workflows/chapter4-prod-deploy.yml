@@ -1,0 +1,45 @@
+name: chapter4-prod Deploy
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "chapter4-prod/**"
+
+jobs:
+  docker-build-push:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chapter4-prod
+
+    permissions:
+      contents: read
+      id-token: write  # for Workload Identity Federation (future migration)
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.AR_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:${{ github.sha }} \
+            -t ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:latest \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:${{ github.sha }}
+          docker push ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:latest
