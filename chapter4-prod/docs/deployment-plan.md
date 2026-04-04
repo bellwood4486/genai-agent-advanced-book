@@ -91,6 +91,48 @@ chapter4-prod/tests/
 
 ---
 
+## GitHub Actions
+
+### ワークフローファイル構成
+
+```
+.github/workflows/
+  chapter4-prod-ci.yml         # Lint + Unit tests（push / PR毎）
+  chapter4-prod-deploy.yml     # Docker build & push（devへのmerge時）
+  chapter4-prod-tf-plan.yml    # Terraform plan（infra/以下変更のPR時）
+```
+
+ファイル名を `chapter4-prod-` プレフィックスで統一することで、他のchapterのワークフローと混在しても識別できる。
+
+### 各ワークフローの概要
+
+| ファイル | トリガー | 内容 |
+|--------|---------|------|
+| `chapter4-prod-ci.yml` | push / PR（`chapter4-prod/**`変更時） | ruff lint + `uv run pytest tests/unit/` |
+| `chapter4-prod-deploy.yml` | `dev`ブランチへのmerge（`chapter4-prod/**`変更時） | Dockerイメージビルド → Artifact Registryへpush |
+| `chapter4-prod-tf-plan.yml` | PR（`chapter4-prod/infra/**`変更時） | `terraform plan`の結果をPRにコメント出力 |
+
+### 自動化しないもの（手動運用）
+
+| 操作 | 理由 |
+|------|------|
+| `terraform apply` | 学習目的のため手動適用で挙動を確認する |
+| Integration / E2E テスト | 外部API（Elastic/Qdrant/OpenAI）への課金が発生するため、`workflow_dispatch`（手動トリガー）で必要時のみ実行 |
+
+### GCP認証
+
+初期はサービスアカウントキーをGitHub Secretsに登録して運用する。学習が進んだ段階でWorkload Identity Federation（キーレス認証）に移行することを検討する。
+
+### Increment別の対応
+
+| Increment | 追加・更新するワークフロー |
+|-----------|------------------------|
+| 1: 設定リファクタ | `chapter4-prod-ci.yml` 作成（lint + unit test） |
+| 2: FastAPI + Docker | `chapter4-prod-deploy.yml` 作成（Artifact Registry push） |
+| 4: GCP基盤 | `chapter4-prod-tf-plan.yml` 作成（terraform plan on PR） |
+
+---
+
 ## 前提準備
 
 ### Step 0: GCPプロジェクト + Terraform + マネージドサービスアカウント準備

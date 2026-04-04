@@ -15,6 +15,7 @@
 - [ ] Terraform state用GCSバケット作成（バージョニング有効）
 - [ ] Elastic Cloudアカウント作成 + APIキー取得
 - [ ] Qdrant Cloudアカウント作成 + APIキー取得
+- [ ] GitHub Secretsにサービスアカウントキー登録（GCP認証用）
 
 ## Increment 1: プロジェクト雛形 + 設定リファクタ
 - [ ] chapter4から`src/`, `data/`, `pyproject.toml`, `uv.lock`等をコピー
@@ -24,6 +25,7 @@
 - [ ] Terraform `infra/`ディレクトリ構造作成（スケルトン）
 - [ ] `pytest tests/unit/test_configs.py` 全通過
 - [ ] `terraform validate` 成功
+- [ ] `.github/workflows/chapter4-prod-ci.yml`作成（lint + unit test、devへのPR/push時）
 
 ## Increment 2: FastAPI + Dockerfile
 - [ ] `fastapi`, `uvicorn`を依存に追加
@@ -33,6 +35,7 @@
 - [ ] `pytest tests/unit/test_main.py` 全通過
 - [ ] Dockerビルド成功
 - [ ] `pytest tests/integration/test_api_local.py` 全通過
+- [ ] `.github/workflows/chapter4-prod-deploy.yml`作成（Docker build & push to Artifact Registry、devへのmerge時）
 
 ## Increment 3: Elastic Cloud Serverless + Qdrant Cloud（Terraform）
 - [ ] `modules/elastic-cloud/` — `ec_elasticsearch_project`定義
@@ -48,6 +51,7 @@
 - [ ] Cloud Run用サービスアカウント + IAM設定
 - [ ] `terraform apply` 成功
 - [ ] Artifact Registryへのdocker push疎通確認
+- [ ] `.github/workflows/chapter4-prod-tf-plan.yml`作成（`infra/`変更のPR時にterraform planをコメント出力）
 
 ## Increment 5: Cloud Runデプロイ（MVP）⭐
 - [ ] `modules/cloud-run/` — v2 service定義
