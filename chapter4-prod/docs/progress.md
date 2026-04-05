@@ -63,10 +63,10 @@
 
 ## Increment 5: Cloud Runデプロイ（MVP）⭐
 - [x] `modules/cloud-run/` — v2 service定義
-- [x] `src/configs.py` に `elastic_api_key` 追加（Elastic Cloud Serverless 認証対応）
-- [ ] アプリイメージをArtifact Registryにpush
-- [ ] `terraform apply` 成功
-- [ ] `pytest tests/e2e/test_cloud_run.py` 全通過（ヘルスチェック + 実際の質問への回答）
+- [x] `src/configs.py` に `elastic_username` / `elastic_api_key` 追加（Elastic Cloud Serverless Basic認証対応）
+- [x] アプリイメージをArtifact Registryにpush（`--platform linux/amd64 --provenance=false`）
+- [x] `terraform apply` 成功
+- [x] `pytest tests/e2e/test_cloud_run.py` 全通過（ヘルスチェック + 実際の質問への回答）
 
 ## Increment 6: GCS + Cloud Run Jobs（インデックス作成パイプライン）
 - [ ] `modules/storage/` — GCSバケット定義
