@@ -69,10 +69,10 @@
 - [x] `pytest tests/e2e/test_cloud_run.py` 全通過（ヘルスチェック + 実際の質問への回答）
 
 ## Increment 6: GCS + Cloud Run Jobs（インデックス作成パイプライン）
-- [ ] `modules/storage/` — GCSバケット定義
-- [ ] `modules/ingestion/` — Cloud Run Job定義
-- [ ] `google-cloud-storage`を依存に追加
-- [ ] `create_index.py`をGCS読み取り対応にリファクタ
+- [x] `modules/storage/` — GCSバケット定義
+- [x] `modules/ingestion/` — Cloud Run Job定義
+- [x] `google-cloud-storage`を依存に追加
+- [x] `create_index.py`をGCS読み取り対応にリファクタ
 - [ ] `terraform apply` 成功
 - [ ] `pytest tests/integration/test_ingestion.py` 全通過（GCSアップロード → Job実行 → インデックス確認）
 
