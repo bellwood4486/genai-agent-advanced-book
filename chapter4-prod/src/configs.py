@@ -16,4 +16,8 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
 
+    # GCS バケット名。設定されていれば GCS からドキュメントを読み込む（Increment 6）。
+    # 未設定（None）の場合はローカルの data/ ディレクトリを使用する（ローカル開発用）。
+    gcs_bucket_name: str | None = None
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

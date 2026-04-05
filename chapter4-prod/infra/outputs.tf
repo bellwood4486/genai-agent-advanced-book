@@ -68,3 +68,14 @@ output "cloud_run_url" {
   description = "Cloud Run サービスの HTTPS URL（E2E テストの CLOUD_RUN_URL 環境変数に使用）"
   value       = module.cloud-run.service_url
 }
+
+# Increment 6: GCS + Cloud Run Jobs
+output "gcs_bucket_name" {
+  description = "ドキュメントアップロード用 GCS バケット名（make upload-docs で使用）"
+  value       = module.storage.bucket_name
+}
+
+output "ingestion_job_name" {
+  description = "インデックス作成 Cloud Run Job 名（make run-ingestion で使用）"
+  value       = module.ingestion.job_name
+}

@@ -1,7 +1,9 @@
 import os
+import tempfile
 from glob import glob
 
 from elasticsearch import Elasticsearch, helpers
+from google.cloud import storage as gcs_storage
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain_core.documents import Document
@@ -102,6 +104,10 @@ def create_keyword_search_index(es: Elasticsearch, index_name: str) -> None:
 
 
 def create_vector_search_index(qdrant_client: QdrantClient, index_name: str) -> None:
+    # collection_exists() でチェックすることで冪等にする（重複作成エラーを防ぐ）。
+    if qdrant_client.collection_exists(collection_name=index_name):
+        print(f"Collection {index_name} already exists, skipping creation")
+        return
     result = qdrant_client.create_collection(
         collection_name=index_name,
         vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
@@ -168,10 +174,41 @@ def add_documents_to_qdrant(
     print(operation_info)
 
 
+def download_from_gcs(bucket_name: str, local_dir: str) -> None:
+    """GCS バケットから全ファイルをローカルの一時ディレクトリにダウンロードする。
+
+    Cloud Run Job は Workload Identity（SA のデフォルト認証）でバケットにアクセスするため、
+    明示的な認証情報の設定は不要（SA に storage.objectViewer ロールが必要）。
+    """
+    client = gcs_storage.Client()
+    bucket = client.bucket(bucket_name)
+    blobs = list(bucket.list_blobs())
+
+    for blob in blobs:
+        # フォルダオブジェクト（末尾が /）は実体がないのでスキップ
+        if blob.name.endswith("/"):
+            continue
+        local_path = os.path.join(local_dir, blob.name)
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
+        blob.download_to_filename(local_path)
+        print(f"Downloaded: gs://{bucket_name}/{blob.name} -> {local_path}")
+
+
 if __name__ == "__main__":
     settings = Settings()
+
+    # GCS_BUCKET_NAME が設定されていれば GCS からダウンロード、
+    # 未設定ならローカルの data/ ディレクトリを使う（ローカル開発との後方互換）。
+    if settings.gcs_bucket_name:
+        data_dir = tempfile.mkdtemp()
+        print(f"Downloading documents from gs://{settings.gcs_bucket_name} to {data_dir}")
+        download_from_gcs(settings.gcs_bucket_name, data_dir)
+    else:
+        data_dir = "data"
+        print(f"Using local data directory: {data_dir}")
+
     # Elastic Cloud Serverless は Basic 認証（ユーザー名 + パスワード）を使う。
-    # elastic_username と elastic_api_key（パスワード）がともに設定されている場合のみ
+    # elastic_username と elastic_password がともに設定されている場合のみ
     # basic_auth を渡す。ローカル ES（認証なし）との互換性を維持するため None はスキップ。
     es_kwargs: dict = {"hosts": [settings.elasticsearch_url]}
     if settings.elastic_username and settings.elastic_password:
@@ -191,12 +228,12 @@ if __name__ == "__main__":
     create_vector_search_index(qdrant_client, index_name)
     print("--------------------------------")
     print("Loading documents from manual data")
-    manual_docs = load_pdf_docs(data_dir_path="data")
+    manual_docs = load_pdf_docs(data_dir_path=data_dir)
     print(f"Loaded {len(manual_docs)} documents")
 
     print("--------------------------------")
     print("Loading documents from qa data")
-    qa_docs = load_csv_docs(data_dir_path="data")
+    qa_docs = load_csv_docs(data_dir_path=data_dir)
     print(f"Loaded {len(qa_docs)} documents")
 
     print("Adding documents to keyword search index")

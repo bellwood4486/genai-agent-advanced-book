@@ -14,6 +14,7 @@ def base_env(monkeypatch):
     monkeypatch.delenv("ELASTIC_PASSWORD", raising=False)
     monkeypatch.delenv("QDRANT_URL", raising=False)
     monkeypatch.delenv("QDRANT_API_KEY", raising=False)
+    monkeypatch.delenv("GCS_BUCKET_NAME", raising=False)
 
 
 def test_settings_builds_with_required_fields(base_env):
@@ -41,6 +42,18 @@ def test_elastic_auth_defaults_are_none(base_env):
     settings = Settings()
     assert settings.elastic_username is None
     assert settings.elastic_password is None
+
+
+def test_gcs_bucket_name_default_is_none(base_env):
+    # GCS_BUCKET_NAME 未設定時はローカル data/ を使う（ローカル開発との後方互換）
+    settings = Settings()
+    assert settings.gcs_bucket_name is None
+
+
+def test_gcs_bucket_name_is_set_via_env_var(base_env, monkeypatch):
+    monkeypatch.setenv("GCS_BUCKET_NAME", "my-project-helpdesk-docs")
+    settings = Settings()
+    assert settings.gcs_bucket_name == "my-project-helpdesk-docs"
 
 
 def test_env_var_overrides_defaults(base_env, monkeypatch):
