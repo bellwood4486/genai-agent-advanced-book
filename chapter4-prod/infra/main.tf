@@ -4,6 +4,21 @@
 # Cloud Run、Secret Manager、Artifact Registry の API を有効にする。
 # 各モジュールが depends_on でこれらを参照することで、
 # API が有効になる前にリソース作成が始まるのを防ぐ。
+# Cloud Resource Manager API: google_project_service や IAM ポリシーの読み書きに必要。
+# Terraform が GCP リソースを管理（plan/apply）する際に内部的に使用する。
+resource "google_project_service" "cloudresourcemanager" {
+  project            = var.project_id
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+# IAM API: google_service_account や google_project_iam_member の管理に必要。
+resource "google_project_service" "iam" {
+  project            = var.project_id
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
 resource "google_project_service" "compute" {
   project            = var.project_id
   service            = "compute.googleapis.com"
