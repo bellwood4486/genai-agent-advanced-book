@@ -38,4 +38,13 @@ resource "google_secret_manager_secret_version" "this" {
   # Terraform state に平文で保存されるため、state ファイルのアクセス制御が重要。
   # GCS backend + IAM で保護されているが、state への直接アクセスには注意する。
   secret_data = each.value
+
+  lifecycle {
+    # plan 実行時、Terraform は現在の secret_data を Secret Manager から読み取って
+    # state と比較しようとする（これには secretmanager.versions.access 権限が必要）。
+    # CI/CD サービスアカウントにシークレット値の読み取り権限を与えないために
+    # ignore_changes を設定し、初回 apply 以降の差分チェックをスキップする。
+    # 値を更新したい場合は手動で terraform apply を実行すること。
+    ignore_changes = [secret_data]
+  }
 }
