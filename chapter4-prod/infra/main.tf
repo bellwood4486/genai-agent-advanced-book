@@ -156,13 +156,38 @@ module "artifact-registry" {
 }
 
 # Increment 5: Cloud Run MVP
-# module "cloud-run" {
-#   source            = "./modules/cloud-run"
-#   project_id        = var.project_id
-#   region            = var.region
-#   elasticsearch_url = module.elastic-cloud.endpoint
-#   qdrant_url        = module.qdrant-cloud.endpoint
-# }
+module "cloud-run" {
+  source = "./modules/cloud-run"
+
+  project_id = var.project_id
+  region     = var.region
+
+  # Artifact Registry のリポジトリ URL + イメージ名 + タグ。
+  # リポジトリ URL 例: asia-northeast1-docker.pkg.dev/genai-book-ch4-helpdesk/helpdesk
+  # latest タグを常に参照する。イメージは terraform apply 前に docker push しておく必要がある。
+  image = "${module.artifact-registry.repository_url}/helpdesk-agent:latest"
+
+  # Increment 4 で作成した最小権限サービスアカウントを指定。
+  service_account_email = google_service_account.cloud_run.email
+
+  # Elastic Cloud Serverless と Qdrant Cloud のエンドポイント URL を渡す。
+  # これらはパブリックエンドポイントなので VPC Egress は不要（MVP では Direct VPC Egress は使わない）。
+  elasticsearch_url = module.elastic-cloud.endpoint
+  qdrant_url        = module.qdrant-cloud.endpoint
+
+  openai_api_base = var.openai_api_base
+  openai_model    = var.openai_model
+
+  # Secret Manager のシークレット完全修飾 ID マップを渡す。
+  # Cloud Run がコンテナ起動時に各シークレットの最新バージョンを取得して環境変数にセットする。
+  secret_ids = module.secret-manager.secret_ids
+
+  depends_on = [
+    google_project_service.run,
+    module.secret-manager,
+    module.artifact-registry,
+  ]
+}
 
 # Increment 6: GCS + Cloud Run Jobs
 # module "storage" {

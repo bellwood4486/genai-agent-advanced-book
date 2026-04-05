@@ -62,3 +62,9 @@ output "subnet_name" {
   description = "サブネット名（Increment 5 の Direct VPC Egress 設定で使用）"
   value       = module.networking.subnet_name
 }
+
+# Increment 5: Cloud Run
+output "cloud_run_url" {
+  description = "Cloud Run サービスの HTTPS URL（E2E テストの CLOUD_RUN_URL 環境変数に使用）"
+  value       = module.cloud-run.service_url
+}
