@@ -26,10 +26,29 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      # PR にデプロイ結果をコメントするために必要
+      # コメントの更新（updateComment）に必要
       pull-requests: write
 
     steps:
+      # ワークフロー開始直後に /deploy コメントを「実行中」状態に更新する。
+      # 以降のステップでも同じ comment_id を更新し続けることで進捗を表示する。
+      - name: Report started
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              body: [
+                '🚀 `/deploy` を実行中...',
+                '',
+                '- [ ] PR ブランチ取得',
+                '- [ ] ビルド',
+                '- [ ] Artifact Registry へ push',
+              ].join('\n'),
+            });
+
       # issue_comment イベントではデフォルトブランチが checkout される。
       # PR のブランチを checkout するために、まず PR のメタデータを取得する。
       - name: Get PR branch
@@ -44,6 +63,24 @@ jobs:
             });
             core.setOutput('ref', pr.data.head.ref);
             core.setOutput('sha', pr.data.head.sha);
+
+      - name: Report branch fetched
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ steps.pr.outputs.sha }}'.substring(0, 7);
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              body: [
+                '🚀 `/deploy` を実行中...',
+                '',
+                `- [x] PR ブランチ取得 (\`${{ steps.pr.outputs.ref }}\` @ \`${sha}\`)`,
+                '- [ ] ビルド',
+                '- [ ] Artifact Registry へ push',
+              ].join('\n'),
+            });
 
       - uses: actions/checkout@v4
         with:
@@ -67,19 +104,63 @@ jobs:
             -t ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:latest \
             .
 
+      - name: Report build done
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ steps.pr.outputs.sha }}'.substring(0, 7);
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              body: [
+                '🚀 `/deploy` を実行中...',
+                '',
+                `- [x] PR ブランチ取得 (\`${{ steps.pr.outputs.ref }}\` @ \`${sha}\`)`,
+                '- [x] ビルド',
+                '- [ ] Artifact Registry へ push',
+              ].join('\n'),
+            });
+
       - name: Push Docker image
         run: |
           docker push ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:${{ steps.pr.outputs.sha }}
           docker push ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:latest
 
-      - name: Comment on PR
+      # 全ステップ成功時の最終更新
+      - name: Report success
         uses: actions/github-script@v7
         with:
           script: |
             const sha = '${{ steps.pr.outputs.sha }}'.substring(0, 7);
-            await github.rest.issues.createComment({
+            await github.rest.issues.updateComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `✅ Image deployed to Artifact Registry\n\n- Tag: \`${sha}\` / \`:latest\`\n- Branch: \`${{ steps.pr.outputs.ref }}\``,
+              comment_id: context.payload.comment.id,
+              body: [
+                '✅ `/deploy` 完了',
+                '',
+                `- [x] PR ブランチ取得 (\`${{ steps.pr.outputs.ref }}\` @ \`${sha}\`)`,
+                '- [x] ビルド',
+                `- [x] Artifact Registry へ push (\`${sha}\` / \`:latest\`)`,
+              ].join('\n'),
+            });
+
+      # いずれかのステップが失敗したときの更新
+      # if: failure() により、上記ステップが失敗した場合のみ実行される
+      - name: Report failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              body: [
+                '❌ `/deploy` 失敗',
+                '',
+                `詳細は [Actions ログ](${runUrl}) を確認してください。`,
+              ].join('\n'),
             });
