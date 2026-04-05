@@ -123,6 +123,23 @@ chapter4-prod/tests/
 
 初期はサービスアカウントキーをGitHub Secretsに登録して運用する。学習が進んだ段階でWorkload Identity Federation（キーレス認証）に移行することを検討する。
 
+### GitHub Secrets / Variables の設定
+
+Settings → Secrets and variables → Actions で以下を登録する:
+
+**Secrets**（機密値 — マスクされて表示されない）:
+
+| シークレット名 | 用途 |
+|-------------|------|
+| `GCP_SA_KEY` | GCPサービスアカウントキーのJSON（base64なしの生JSON） |
+
+**Variables**（非機密値 — ログに表示される）:
+
+| 変数名 | 値 | 用途 |
+|--------|-----|------|
+| `AR_REGION` | `asia-northeast1` | Artifact Registryのリージョン（Docker認証・イメージURL） |
+| `GCP_PROJECT_ID` | `<your-project-id>` | GCPプロジェクトID（Terraform plan / Docker push共通） |
+
 ### Increment別の対応
 
 | Increment | 追加・更新するワークフロー |

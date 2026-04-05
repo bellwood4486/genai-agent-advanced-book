@@ -15,7 +15,8 @@
 - [x] Terraform state用GCSバケット作成（`genai-book-ch4-helpdesk-tfstate`、バージョニング有効）
 - [x] Elastic Cloudアカウント作成 + APIキー取得
 - [x] Qdrant Cloudアカウント作成 + APIキー取得
-- [ ] GitHub Secretsにサービスアカウントキー登録（GCP認証用）← Increment 4で対応
+- [x] GitHub Secretsにサービスアカウントキー登録（`GCP_SA_KEY`）← Increment 4で対応
+- [x] GitHub Variables登録（`AR_REGION=asia-northeast1`, `GCP_PROJECT_ID`）← Increment 4で対応
 
 ## Increment 1: プロジェクト雛形 + 設定リファクタ
 - [x] chapter4から`src/`, `data/`, `pyproject.toml`, `uv.lock`等をコピー
@@ -58,6 +59,7 @@
 - [x] `terraform apply` 成功
 - [x] Artifact Registryへのdocker push疎通確認
 - [x] `.github/workflows/chapter4-prod-tf-plan.yml`作成（`infra/`変更のPR時にterraform planをコメント出力）
+- [x] GitHub Variables登録（`AR_REGION`, `GCP_PROJECT_ID`）← Deploy CI修正に必要
 
 ## Increment 5: Cloud Runデプロイ（MVP）⭐
 - [ ] `modules/cloud-run/` — v2 service定義
