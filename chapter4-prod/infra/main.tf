@@ -9,7 +9,9 @@ module "elastic-cloud" {
 
 module "qdrant-cloud" {
   source = "./modules/qdrant-cloud"
-  region = var.region
+  # Qdrant Cloud の Free Tier は提供リージョンが限られるため、
+  # GCP の var.region とは別に qdrant_region で独立して指定する。
+  region = var.qdrant_region
 }
 
 # Increment 4: GCP foundation

@@ -31,3 +31,15 @@ variable "qdrant_cloud_account_id" {
   description = "Qdrant Cloud account ID（Qdrant Cloud コンソールの URL に表示される）"
   type        = string
 }
+
+variable "qdrant_region" {
+  description = <<-EOT
+    Qdrant Cloud クラスタを配置するリージョン。
+    GCP の var.region とは独立して設定できる。
+    Free Tier が利用可能なリージョンに限られる点に注意。
+    利用可能リージョンは Qdrant Cloud コンソールの「Create Cluster」画面で確認できる。
+    （例: us-east4, europe-west3）
+  EOT
+  type        = string
+  default     = "us-east4"
+}

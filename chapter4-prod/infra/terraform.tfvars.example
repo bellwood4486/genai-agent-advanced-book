@@ -3,4 +3,7 @@ region                  = "asia-northeast1"
 elastic_api_key         = "your-elastic-cloud-api-key"
 qdrant_cloud_api_key    = "your-qdrant-cloud-api-key"
 qdrant_cloud_account_id = "your-qdrant-cloud-account-id"
+# qdrant_region: Qdrant Cloud の Free Tier が利用可能なリージョンを指定する。
+# GCP の region とは独立。利用可能リージョンは Qdrant Cloud コンソール「Create Cluster」で確認。
+# qdrant_region = "us-east4"  # デフォルト値。変更が必要な場合のみ記載。
 openai_api_key          = "your-openai-api-key"
