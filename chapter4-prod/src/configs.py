@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     openai_model: str
 
     elasticsearch_url: str = "http://localhost:9200"
+    # Elastic Cloud Serverless では API キー認証が必須。
+    # ローカルの Elasticsearch（認証なし）との互換性を保つため None をデフォルトにする。
+    elastic_api_key: str | None = None
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
 

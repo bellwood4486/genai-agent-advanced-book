@@ -28,7 +28,12 @@ def search_xyz_manual(keywords: str) -> list[SearchOutput]:
     logger.info(f"Searching XYZ manual by keyword: {keywords}")
 
     settings = Settings()
-    es = Elasticsearch(settings.elasticsearch_url)
+    # Elastic Cloud Serverless では API キー認証が必須。
+    # elastic_api_key が設定されている場合のみ api_key を渡す（ローカル ES との互換性維持）。
+    es_kwargs: dict = {"hosts": [settings.elasticsearch_url]}
+    if settings.elastic_api_key:
+        es_kwargs["api_key"] = settings.elastic_api_key
+    es = Elasticsearch(**es_kwargs)
 
     # 検索対象のインデックスを指定
     index_name = "documents"

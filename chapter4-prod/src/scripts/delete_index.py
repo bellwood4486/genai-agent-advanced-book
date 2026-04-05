@@ -25,7 +25,12 @@ def delete_qdrant_index(qdrant_client: QdrantClient, collection_name: str) -> No
 
 if __name__ == "__main__":
     settings = Settings()
-    es = Elasticsearch(settings.elasticsearch_url)
+    # Elastic Cloud Serverless では API キー認証が必須。
+    # elastic_api_key が設定されている場合のみ api_key を渡す（ローカル ES との互換性維持）。
+    es_kwargs: dict = {"hosts": [settings.elasticsearch_url]}
+    if settings.elastic_api_key:
+        es_kwargs["api_key"] = settings.elastic_api_key
+    es = Elasticsearch(**es_kwargs)
     qdrant_kwargs: dict = {"url": settings.qdrant_url}
     if settings.qdrant_api_key:
         qdrant_kwargs["api_key"] = settings.qdrant_api_key
