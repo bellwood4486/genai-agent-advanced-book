@@ -20,18 +20,18 @@ terraform {
 # 認証（APIキー）はルートの providers.tf で設定済みのため、ここでは不要。
 #
 # 注意: このリソースは Technical Preview（将来スキーマが変わる可能性あり）。学習用途なので許容する。
-
-# GCP リージョン名を Elastic Cloud のリージョン ID 形式に変換する。
-# Elastic Cloud では GCP リージョンに "gcp-" プレフィックスが付く。
-# 例: "asia-northeast1" -> "gcp-asia-northeast1"
-locals {
-  elastic_region_id = "gcp-${var.region}"
-}
+#
+# region_id の形式について:
+# Hosted デプロイメント（ec_deployment）では "gcp-asia-northeast1" のような形式を使うが、
+# Serverless プロジェクト（ec_elasticsearch_project）は独自のリージョン ID リストを持つ。
+# 利用可能なリージョン ID は Elastic Cloud API で確認できる:
+#   curl -H "Authorization: ApiKey <key>" https://api.elastic-cloud.com/api/v1/serverless/regions
+# var.region にはそのリージョン ID をそのまま渡す（例: "gcp-asia-southeast1"）。
 
 resource "ec_elasticsearch_project" "this" {
   name = var.project_name
 
-  # region_id: Elastic Cloud 上でプロジェクトを稼働させるリージョン。
-  # GCP 東京（asia-northeast1）に配置することで、Cloud Run との通信レイテンシを抑える。
-  region_id = local.elastic_region_id
+  # region_id: Elastic Cloud Serverless のリージョン ID。
+  # ルートモジュールの elastic_region 変数から渡される（例: "gcp-asia-southeast1"）。
+  region_id = var.region
 }

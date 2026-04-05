@@ -65,6 +65,15 @@ resource "qdrant-cloud_accounts_cluster" "this" {
       package_id = local.free_package_id
     }
   }
+
+  lifecycle {
+    # Qdrant Cloud はクラスタ作成時に rebalance_strategy, restart_policy,
+    # database_configuration 等のデフォルト値を自動設定する。
+    # これらは Terraform の定義に含まれていないため、毎回「差分あり」と検出されて
+    # 更新処理が走り Internal server error になる。
+    # ignore_changes で configuration ブロック全体の変更を無視することで回避する。
+    ignore_changes = [configuration]
+  }
 }
 
 # クラスタへのアクセスに使うデータベース API キー。

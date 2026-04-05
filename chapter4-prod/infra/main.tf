@@ -4,7 +4,9 @@
 # APIキーはプロバイダレベル（providers.tf）で認証済みのため、モジュールへの受け渡しは不要。
 module "elastic-cloud" {
   source = "./modules/elastic-cloud"
-  region = var.region
+  # Elastic Cloud Serverless は利用可能リージョンが限られるため、
+  # GCP の var.region とは別に elastic_region で独立して指定する。
+  region = var.elastic_region
 }
 
 module "qdrant-cloud" {

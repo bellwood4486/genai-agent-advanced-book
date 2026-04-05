@@ -1,5 +1,5 @@
 variable "region" {
-  description = "GCP リージョン（例: asia-northeast1）。Elastic Cloud のリージョン ID に変換される（gcp- プレフィックス付与）。"
+  description = "Elastic Cloud Serverless のリージョン ID（例: gcp-asia-southeast1）。API の region_id フィールドにそのまま渡される。"
   type        = string
 }
 
