@@ -30,6 +30,42 @@ resource "google_project_service" "artifactregistry" {
   disable_on_destroy = false
 }
 
+# --- Increment 4: GitHub Actions CI/CD 用サービスアカウント ---
+# GitHub Actions から GCP にアクセスするための専用 SA。
+# terraform plan（Artifact Registry/Secret Manager/VPC 等の参照）と
+# docker push（Artifact Registry への書き込み）に必要な権限を付与する。
+# キーは Terraform で管理せず、gcloud CLI で別途生成して GitHub Secrets に登録する。
+resource "google_service_account" "github_actions" {
+  project      = var.project_id
+  account_id   = "github-actions-ci"
+  display_name = "GitHub Actions CI/CD SA"
+}
+
+# terraform plan が GCP リソースの現状を読み取るために必要な読み取り権限。
+# roles/viewer は compute, secretmanager, artifactregistry 等の
+# 読み取り操作を網羅しており、terraform plan の refresh に使用される。
+resource "google_project_iam_member" "github_actions_viewer" {
+  project = var.project_id
+  role    = "roles/viewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# terraform init/plan が GCS backend（terraform state）を読み書きするために必要。
+# state ファイルの読み取りと、plan 実行時のロック（書き込み）に使用される。
+resource "google_project_iam_member" "github_actions_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# GitHub Actions の deploy ワークフロー（chapter4-prod-deploy.yml）が
+# Artifact Registry に Docker イメージを push するために必要。
+resource "google_project_iam_member" "github_actions_ar_writer" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # --- Increment 4: Cloud Run 用サービスアカウント ---
 # デフォルトの Compute Engine SA ではなく専用 SA を作ることで、
 # 最小権限の原則（Principle of Least Privilege）に従う。
