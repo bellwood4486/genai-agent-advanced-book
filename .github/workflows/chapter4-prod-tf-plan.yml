@@ -38,10 +38,14 @@ jobs:
         run: terraform init
 
       # -no-color: GitHub のコメント表示で ANSI エスケープコードが文字化けするのを防ぐ。
+      # -refresh=false: GCP API から現在のリソース状態を読み取らず、ローカル state と比較する。
+      #   Secret Manager のシークレット値読み取り（secretmanager.versions.access 権限）を省略でき、
+      #   CI SA に過剰な権限を付与せずに済む。
+      #   PR でのコード差分チェックが目的なので、refresh なしで十分。
       # continue-on-error: plan が失敗しても後続の「コメント投稿」ステップを実行するため true にする。
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: terraform plan -refresh=false -no-color
         continue-on-error: true
         env:
           TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
