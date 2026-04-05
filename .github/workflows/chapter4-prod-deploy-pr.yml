@@ -1,0 +1,85 @@
+# PR コメントに `/deploy` と書くと、その PR ブランチのコードで
+# Docker イメージをビルドし、Artifact Registry に :latest で push する。
+# マージ前に Cloud Run Job やサービスの動作確認をしたいときに使う。
+#
+# 注意: :latest タグを上書きするため、同時に複数 PR で使うと競合する。
+# このプロジェクトは 1 人開発のため許容している。
+
+name: chapter4-prod Deploy (PR)
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  docker-build-push:
+    # issue_comment は Issue と PR 両方で発火する。
+    # PR のコメントだけに絞るために pull_request の存在をチェックする。
+    if: >
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/deploy')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chapter4-prod
+
+    permissions:
+      contents: read
+      id-token: write
+      # PR にデプロイ結果をコメントするために必要
+      pull-requests: write
+
+    steps:
+      # issue_comment イベントではデフォルトブランチが checkout される。
+      # PR のブランチを checkout するために、まず PR のメタデータを取得する。
+      - name: Get PR branch
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('ref', pr.data.head.ref);
+            core.setOutput('sha', pr.data.head.sha);
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.AR_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:${{ steps.pr.outputs.sha }} \
+            -t ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:latest \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:${{ steps.pr.outputs.sha }}
+          docker push ${{ vars.AR_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/helpdesk/helpdesk-agent:latest
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ steps.pr.outputs.sha }}'.substring(0, 7);
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ Image deployed to Artifact Registry\n\n- Tag: \`${sha}\` / \`:latest\`\n- Branch: \`${{ steps.pr.outputs.ref }}\``,
+            });
