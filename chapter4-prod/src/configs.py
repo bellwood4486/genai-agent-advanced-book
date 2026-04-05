@@ -12,8 +12,7 @@ class Settings(BaseSettings):
     # ローカルの Elasticsearch（認証なし）との互換性を保つため None をデフォルトにする。
     elastic_username: str | None = None
     # Elastic Cloud Serverless の Basic 認証パスワード（Secret Manager で管理）。
-    # 環境変数名は ELASTIC_API_KEY だが値は Elasticsearch パスワード。
-    elastic_api_key: str | None = None
+    elastic_password: str | None = None
     qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str | None = None
 

@@ -171,9 +171,9 @@ module "secret-manager" {
   project_id = var.project_id
 
   openai_api_key = var.openai_api_key
-  # Elastic Cloud Serverless が自動生成した Elasticsearch 認証パスワードを
+  # Elastic Cloud Serverless が自動生成した Elasticsearch Basic 認証パスワードを
   # Secret Manager に保存する。Cloud Run からは secret_key_ref で参照する（Increment 5）。
-  elastic_api_key = module.elastic-cloud.credentials.password
+  elastic_password = module.elastic-cloud.credentials.password
   # Qdrant Cloud が自動生成したデータベース API キーを Secret Manager に保存する。
   qdrant_api_key = module.qdrant-cloud.api_key
 

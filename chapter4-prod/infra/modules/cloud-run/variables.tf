@@ -53,7 +53,7 @@ variable "openai_model" {
 variable "secret_ids" {
   description = <<-EOT
     Secret Manager のシークレット完全修飾 ID のマップ。
-    キー: "openai-api-key", "elastic-api-key", "qdrant-api-key"
+    キー: "openai-api-key", "elastic-password", "qdrant-api-key"
     値: projects/<project>/secrets/<name> 形式
   EOT
   type = map(string)
