@@ -62,7 +62,8 @@
 - [x] GitHub Variables登録（`AR_REGION`, `GCP_PROJECT_ID`）← Deploy CI修正に必要
 
 ## Increment 5: Cloud Runデプロイ（MVP）⭐
-- [ ] `modules/cloud-run/` — v2 service定義
+- [x] `modules/cloud-run/` — v2 service定義
+- [x] `src/configs.py` に `elastic_api_key` 追加（Elastic Cloud Serverless 認証対応）
 - [ ] アプリイメージをArtifact Registryにpush
 - [ ] `terraform apply` 成功
 - [ ] `pytest tests/e2e/test_cloud_run.py` 全通過（ヘルスチェック + 実際の質問への回答）
