@@ -47,14 +47,15 @@ resource "google_project_service" "artifactregistry" {
 
 # --- Increment 4: GitHub Actions CI/CD 用サービスアカウント ---
 # GitHub Actions から GCP にアクセスするための専用 SA。
-# terraform plan（Artifact Registry/Secret Manager/VPC 等の参照）と
-# docker push（Artifact Registry への書き込み）に必要な権限を付与する。
+# terraform plan / apply、docker push に必要な権限を付与する。
 # キーは Terraform で管理せず、gcloud CLI で別途生成して GitHub Secrets に登録する。
 resource "google_service_account" "github_actions" {
   project      = var.project_id
   account_id   = "github-actions-ci"
   display_name = "GitHub Actions CI/CD SA"
 }
+
+# --- 読み取り系権限（terraform plan / refresh） ---
 
 # terraform plan が GCP リソースの現状を読み取るために必要な読み取り権限。
 # roles/viewer は compute, secretmanager, artifactregistry 等の
@@ -65,7 +66,9 @@ resource "google_project_iam_member" "github_actions_viewer" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
-# terraform init/plan が GCS backend（terraform state）を読み書きするために必要。
+# --- ストレージ系権限（terraform state + docker push） ---
+
+# terraform init/plan/apply が GCS backend（terraform state）を読み書きするために必要。
 # state ファイルの読み取りと、plan 実行時のロック（書き込み）に使用される。
 resource "google_project_iam_member" "github_actions_storage_admin" {
   project = var.project_id
@@ -79,6 +82,36 @@ resource "google_project_iam_member" "github_actions_ar_writer" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
   member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# --- terraform apply 用の書き込み権限（Increment 5 で追加） ---
+# CI で terraform apply を自動実行するために、リソース作成・変更に必要な権限を付与する。
+# 各ロールは管理対象のリソースに対応:
+#   run.admin          → Cloud Run サービスの CRUD
+#   secretmanager.admin → Secret Manager シークレットの CRUD + バージョン読み取り
+#   compute.networkAdmin → VPC / サブネットの CRUD
+#   iam.serviceAccountAdmin → サービスアカウントの作成・管理
+#   iam.serviceAccountUser  → Cloud Run が SA を使用するために必要
+#   resourcemanager.projectIamAdmin → プロジェクトレベルの IAM バインディング管理
+#   serviceusage.serviceUsageAdmin  → GCP API の有効化（google_project_service）
+
+locals {
+  github_actions_apply_roles = [
+    "roles/run.admin",
+    "roles/secretmanager.admin",
+    "roles/compute.networkAdmin",
+    "roles/iam.serviceAccountAdmin",
+    "roles/iam.serviceAccountUser",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/serviceusage.serviceUsageAdmin",
+  ]
+}
+
+resource "google_project_iam_member" "github_actions_apply" {
+  for_each = toset(local.github_actions_apply_roles)
+  project  = var.project_id
+  role     = each.value
+  member   = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
 # --- Increment 4: Cloud Run 用サービスアカウント ---
