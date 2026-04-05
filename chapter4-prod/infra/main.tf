@@ -206,6 +206,9 @@ module "cloud-run" {
   # Elastic Cloud Serverless と Qdrant Cloud のエンドポイント URL を渡す。
   # これらはパブリックエンドポイントなので VPC Egress は不要（MVP では Direct VPC Egress は使わない）。
   elasticsearch_url = module.elastic-cloud.endpoint
+  # ec_elasticsearch_project.credentials は Basic 認証の username + password を持つ。
+  # ユーザー名は機密でないため平文 env var で渡す。パスワードは secret_ids（ELASTIC_API_KEY）経由で渡す。
+  elastic_username  = module.elastic-cloud.credentials.username
   qdrant_url        = module.qdrant-cloud.endpoint
 
   openai_api_base = var.openai_api_base

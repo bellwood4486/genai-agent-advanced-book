@@ -30,6 +30,13 @@ resource "google_cloud_run_v2_service" "this" {
         name  = "QDRANT_URL"
         value = var.qdrant_url
       }
+      # Elastic Cloud Serverless の Basic 認証ユーザー名。
+      # パスワードは ELASTIC_API_KEY として Secret Manager から取得する。
+      # ユーザー名は機密ではないため平文 env var として渡す。
+      env {
+        name  = "ELASTIC_USERNAME"
+        value = var.elastic_username
+      }
       env {
         name  = "OPENAI_API_BASE"
         value = var.openai_api_base

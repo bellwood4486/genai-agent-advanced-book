@@ -26,6 +26,15 @@ variable "elasticsearch_url" {
   type        = string
 }
 
+variable "elastic_username" {
+  description = <<-EOT
+    Elastic Cloud Serverless の Basic 認証ユーザー名。
+    ec_elasticsearch_project.credentials.username から取得する。
+    パスワード（elastic_api_key）と組み合わせて basic_auth に使う。
+  EOT
+  type = string
+}
+
 variable "qdrant_url" {
   description = "Qdrant Cloud クラスタのエンドポイント URL"
   type        = string
