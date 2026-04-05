@@ -23,7 +23,10 @@ CLOUD_RUN_URL = os.getenv("CLOUD_RUN_URL", "").rstrip("/")
 def skip_if_no_url():
     """CLOUD_RUN_URL が未設定の場合はテストをスキップする。"""
     if not CLOUD_RUN_URL:
-        pytest.skip("CLOUD_RUN_URL is not set — run: export CLOUD_RUN_URL=$(terraform -chdir=infra output -raw cloud_run_url)")
+        pytest.skip(
+            "CLOUD_RUN_URL is not set — run: "
+            "export CLOUD_RUN_URL=$(terraform -chdir=infra output -raw cloud_run_url)"
+        )
 
 
 def test_health():
