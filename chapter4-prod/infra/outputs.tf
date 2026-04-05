@@ -36,3 +36,29 @@ output "qdrant_api_key" {
   value       = module.qdrant-cloud.api_key
   sensitive   = true
 }
+
+# Increment 4: GCP 基盤
+output "artifact_registry_url" {
+  description = "Artifact Registry Docker リポジトリの URL（docker push/pull 先）"
+  value       = module.artifact-registry.repository_url
+}
+
+output "cloud_run_service_account_email" {
+  description = "Cloud Run 用サービスアカウントのメールアドレス（Increment 5 で使用）"
+  value       = google_service_account.cloud_run.email
+}
+
+output "github_actions_service_account_email" {
+  description = "GitHub Actions CI/CD 用サービスアカウントのメールアドレス"
+  value       = google_service_account.github_actions.email
+}
+
+output "vpc_network_name" {
+  description = "VPC ネットワーク名（Increment 5 の Direct VPC Egress 設定で使用）"
+  value       = module.networking.network_name
+}
+
+output "subnet_name" {
+  description = "サブネット名（Increment 5 の Direct VPC Egress 設定で使用）"
+  value       = module.networking.subnet_name
+}

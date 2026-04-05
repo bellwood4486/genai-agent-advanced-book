@@ -50,14 +50,14 @@
 - [x] `pytest tests/integration/test_search_cloud.py` 全通過（ES/Qdrant接続・インデックス作成・検索確認）
 
 ## Increment 4: GCP基盤（Terraform）
-- [ ] GCP API有効化（run, secretmanager, artifactregistry）
-- [ ] `modules/networking/` — VPC + サブネット定義
-- [ ] `modules/secret-manager/` — APIキー群を登録
-- [ ] `modules/artifact-registry/` — Dockerリポジトリ定義
-- [ ] Cloud Run用サービスアカウント + IAM設定
-- [ ] `terraform apply` 成功
-- [ ] Artifact Registryへのdocker push疎通確認
-- [ ] `.github/workflows/chapter4-prod-tf-plan.yml`作成（`infra/`変更のPR時にterraform planをコメント出力）
+- [x] GCP API有効化（run, secretmanager, artifactregistry, compute）
+- [x] `modules/networking/` — VPC + サブネット定義
+- [x] `modules/secret-manager/` — APIキー群を登録
+- [x] `modules/artifact-registry/` — Dockerリポジトリ定義
+- [x] Cloud Run用サービスアカウント + IAM設定
+- [x] `terraform apply` 成功
+- [x] Artifact Registryへのdocker push疎通確認
+- [x] `.github/workflows/chapter4-prod-tf-plan.yml`作成（`infra/`変更のPR時にterraform planをコメント出力）
 
 ## Increment 5: Cloud Runデプロイ（MVP）⭐
 - [ ] `modules/cloud-run/` — v2 service定義
