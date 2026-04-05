@@ -27,5 +27,8 @@ provider "ec" {
 }
 
 provider "qdrant" {
-  api_key = var.qdrant_cloud_api_key
+  # api_key: Qdrant Cloud の認証に使うAPIキー
+  # account_id: クラスタを所属させるアカウントID（コンソールURLに表示）
+  api_key    = var.qdrant_cloud_api_key
+  account_id = var.qdrant_cloud_account_id
 }

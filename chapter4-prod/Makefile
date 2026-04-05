@@ -12,7 +12,14 @@ test-unit:
 
 .PHONY: test-integration
 test-integration:
-	@uv run pytest tests/integration/ -v
+	@# $(shell ...) は Makefile のパース時に評価され、コマンドにインライン展開される。
+	@# terraform output から接続情報を取得して環境変数としてテストプロセスに渡す。
+	@ELASTICSEARCH_URL=$(shell terraform -chdir=infra output -raw elasticsearch_endpoint 2>/dev/null) \
+	 ELASTICSEARCH_USERNAME=$(shell terraform -chdir=infra output -json elasticsearch_credentials 2>/dev/null | jq -r .username) \
+	 ELASTICSEARCH_PASSWORD=$(shell terraform -chdir=infra output -json elasticsearch_credentials 2>/dev/null | jq -r .password) \
+	 QDRANT_URL=$(shell terraform -chdir=infra output -raw qdrant_endpoint 2>/dev/null) \
+	 QDRANT_API_KEY=$(shell terraform -chdir=infra output -raw qdrant_api_key 2>/dev/null) \
+	 uv run pytest tests/integration/ -v
 
 .PHONY: test-e2e
 test-e2e:
