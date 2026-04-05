@@ -26,3 +26,8 @@ variable "openai_api_key" {
   type        = string
   sensitive   = true
 }
+
+variable "qdrant_cloud_account_id" {
+  description = "Qdrant Cloud account ID（Qdrant Cloud コンソールの URL に表示される）"
+  type        = string
+}

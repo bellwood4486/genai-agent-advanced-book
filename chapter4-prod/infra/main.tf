@@ -1,16 +1,16 @@
 # Root module — enable each module block as the corresponding Increment is completed.
 
 # Increment 3: Elastic Cloud Serverless + Qdrant Cloud
-# module "elastic-cloud" {
-#   source         = "./modules/elastic-cloud"
-#   elastic_api_key = var.elastic_api_key
-#   region         = var.region
-# }
+# APIキーはプロバイダレベル（providers.tf）で認証済みのため、モジュールへの受け渡しは不要。
+module "elastic-cloud" {
+  source = "./modules/elastic-cloud"
+  region = var.region
+}
 
-# module "qdrant-cloud" {
-#   source               = "./modules/qdrant-cloud"
-#   qdrant_cloud_api_key = var.qdrant_cloud_api_key
-# }
+module "qdrant-cloud" {
+  source = "./modules/qdrant-cloud"
+  region = var.region
+}
 
 # Increment 4: GCP foundation
 # module "networking" {

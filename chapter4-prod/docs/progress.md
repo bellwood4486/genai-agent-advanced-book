@@ -44,8 +44,8 @@
 - [x] `.github/workflows/chapter4-prod-deploy.yml`作成（Docker build & push to Artifact Registry、devへのmerge時）
 
 ## Increment 3: Elastic Cloud Serverless + Qdrant Cloud（Terraform）
-- [ ] `modules/elastic-cloud/` — `ec_elasticsearch_project`定義
-- [ ] `modules/qdrant-cloud/` — Free Tierクラスタ定義
+- [x] `modules/elastic-cloud/` — `ec_elasticsearch_project`定義
+- [x] `modules/qdrant-cloud/` — Free Tierクラスタ定義
 - [ ] `terraform apply` 成功
 - [ ] `pytest tests/integration/test_search_cloud.py` 全通過（ES/Qdrant接続・インデックス作成・検索確認）
 
