@@ -1,0 +1,82 @@
+name: chapter4-prod Terraform Plan
+
+# infra/ 以下に変更がある PR でのみ実行する。
+# terraform plan の結果を PR コメントに出力することで、
+# apply 前にインフラ変更の差分をレビューできるようにする。
+on:
+  pull_request:
+    paths:
+      - "chapter4-prod/infra/**"
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chapter4-prod/infra
+
+    permissions:
+      contents: read
+      pull-requests: write # PR にコメントを書くために必要
+      id-token: write # 将来の Workload Identity Federation 移行に備えて設定しておく
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # サービスアカウントキーで GCP に認証する。
+      # キーは GitHub Secret (GCP_SA_KEY) に JSON 形式で保存されている。
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # GCS backend（backend.tf）にアクセスして state を取得する。
+      - name: Terraform Init
+        run: terraform init
+
+      # -no-color: GitHub のコメント表示で ANSI エスケープコードが文字化けするのを防ぐ。
+      # continue-on-error: plan が失敗しても後続の「コメント投稿」ステップを実行するため true にする。
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color
+        continue-on-error: true
+        env:
+          TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_elastic_api_key: ${{ secrets.ELASTIC_API_KEY }}
+          TF_VAR_qdrant_cloud_api_key: ${{ secrets.QDRANT_CLOUD_API_KEY }}
+          TF_VAR_qdrant_cloud_account_id: ${{ vars.QDRANT_CLOUD_ACCOUNT_ID }}
+          TF_VAR_openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+
+      # plan の標準出力を PR コメントに投稿する。
+      # <details> タグで折りたたみ表示にすることで長い出力でも見やすくなる。
+      - name: Comment Plan on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### Terraform Plan \`${{ steps.plan.outcome }}\`
+
+            <details><summary>Plan Output</summary>
+
+            \`\`\`
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      # plan が失敗していた場合はここで CI を失敗扱いにする。
+      # (continue-on-error で plan ステップ自体は続行させていたため、明示的に失敗させる)
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
