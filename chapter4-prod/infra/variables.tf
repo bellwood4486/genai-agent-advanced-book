@@ -27,6 +27,18 @@ variable "openai_api_key" {
   sensitive   = true
 }
 
+variable "openai_api_base" {
+  description = "OpenAI API のベース URL。Cloud Run の環境変数 OPENAI_API_BASE に設定される。"
+  type        = string
+  default     = "https://api.openai.com/v1"
+}
+
+variable "openai_model" {
+  description = "使用する OpenAI モデル名。Cloud Run の環境変数 OPENAI_MODEL に設定される。"
+  type        = string
+  default     = "gpt-4o-2024-08-06"
+}
+
 variable "qdrant_cloud_account_id" {
   description = "Qdrant Cloud account ID（Qdrant Cloud コンソールの URL に表示される）"
   type        = string

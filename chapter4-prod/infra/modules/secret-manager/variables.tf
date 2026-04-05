@@ -9,9 +9,9 @@ variable "openai_api_key" {
   sensitive   = true
 }
 
-variable "elastic_api_key" {
+variable "elastic_password" {
   description = <<-EOT
-    Elasticsearch への認証パスワード。
+    Elasticsearch への Basic 認証パスワード。
     Elastic Cloud Serverless がプロジェクト作成時に自動生成する credentials.password の値。
     Cloud Run から Elasticsearch API にアクセスする際の Basic 認証に使用する。
   EOT

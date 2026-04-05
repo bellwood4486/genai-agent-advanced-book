@@ -170,7 +170,13 @@ def add_documents_to_qdrant(
 
 if __name__ == "__main__":
     settings = Settings()
-    es = Elasticsearch(settings.elasticsearch_url)
+    # Elastic Cloud Serverless は Basic 認証（ユーザー名 + パスワード）を使う。
+    # elastic_username と elastic_api_key（パスワード）がともに設定されている場合のみ
+    # basic_auth を渡す。ローカル ES（認証なし）との互換性を維持するため None はスキップ。
+    es_kwargs: dict = {"hosts": [settings.elasticsearch_url]}
+    if settings.elastic_username and settings.elastic_password:
+        es_kwargs["basic_auth"] = (settings.elastic_username, settings.elastic_password)
+    es = Elasticsearch(**es_kwargs)
     qdrant_kwargs: dict = {"url": settings.qdrant_url}
     if settings.qdrant_api_key:
         qdrant_kwargs["api_key"] = settings.qdrant_api_key

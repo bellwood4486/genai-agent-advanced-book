@@ -12,7 +12,7 @@ locals {
   # for_each で繰り返し、各エントリに対してシークレット + バージョンを作成する。
   secrets = {
     "openai-api-key"  = var.openai_api_key
-    "elastic-api-key" = var.elastic_api_key
+    "elastic-password" = var.elastic_password
     "qdrant-api-key"  = var.qdrant_api_key
   }
 }
