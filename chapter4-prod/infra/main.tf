@@ -45,6 +45,14 @@ resource "google_project_service" "artifactregistry" {
   disable_on_destroy = false
 }
 
+# Cloud Storage API: GCS バケットの作成・読み書きに必要。
+# Increment 6 のドキュメントアップロード用バケットで使用する。
+resource "google_project_service" "storage" {
+  project            = var.project_id
+  service            = "storage.googleapis.com"
+  disable_on_destroy = false
+}
+
 # --- Increment 4: GitHub Actions CI/CD 用サービスアカウント ---
 # GitHub Actions から GCP にアクセスするための専用 SA。
 # terraform plan / apply、docker push に必要な権限を付与する。
@@ -140,6 +148,14 @@ resource "google_project_iam_member" "cloud_run_ar_reader" {
   member  = "serviceAccount:${google_service_account.cloud_run.email}"
 }
 
+# GCS バケットからドキュメントを読み取る権限（Increment 6）。
+# Cloud Run Job がインデックス作成時に GCS からファイルをダウンロードするために必要。
+resource "google_project_iam_member" "cloud_run_storage_viewer" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${google_service_account.cloud_run.email}"
+}
+
 # Increment 3: Elastic Cloud Serverless + Qdrant Cloud
 # APIキーはプロバイダレベル（providers.tf）で認証済みのため、モジュールへの受け渡しは不要。
 module "elastic-cloud" {
@@ -226,17 +242,47 @@ module "cloud-run" {
 }
 
 # Increment 6: GCS + Cloud Run Jobs
-# module "storage" {
-#   source     = "./modules/storage"
-#   project_id = var.project_id
-#   region     = var.region
-# }
+module "storage" {
+  source     = "./modules/storage"
+  project_id = var.project_id
+  region     = var.region
 
-# module "ingestion" {
-#   source     = "./modules/ingestion"
-#   project_id = var.project_id
-#   region     = var.region
-# }
+  depends_on = [google_project_service.storage]
+}
+
+module "ingestion" {
+  source = "./modules/ingestion"
+
+  project_id = var.project_id
+  region     = var.region
+
+  # Cloud Run Service と同じイメージを再利用する。
+  # command フィールドの上書きで create_index.py を実行する（Dockerfile の変更は不要）。
+  image = "${module.artifact-registry.repository_url}/helpdesk-agent:latest"
+
+  # Increment 4 で作成した最小権限 SA を指定（Increment 6 で storage.objectViewer を追加済み）。
+  service_account_email = google_service_account.cloud_run.email
+
+  gcs_bucket_name = module.storage.bucket_name
+
+  elasticsearch_url = module.elastic-cloud.endpoint
+  elastic_username  = module.elastic-cloud.credentials.username
+  qdrant_url        = module.qdrant-cloud.endpoint
+
+  openai_api_base = var.openai_api_base
+  openai_model    = var.openai_model
+
+  # secret-manager モジュールが出力するシークレット ID マップを渡す。
+  # cloud-run モジュールと同じマップをそのまま使える。
+  secret_ids = module.secret-manager.secret_ids
+
+  depends_on = [
+    google_project_service.run,
+    module.secret-manager,
+    module.artifact-registry,
+    module.storage,
+  ]
+}
 
 # Increment 8: Firestore
 # module "firestore" {

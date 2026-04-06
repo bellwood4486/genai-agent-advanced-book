@@ -19,6 +19,7 @@ test-integration:
 	 ELASTICSEARCH_PASSWORD=$(shell terraform -chdir=infra output -json elasticsearch_credentials 2>/dev/null | jq -r .password) \
 	 QDRANT_URL=$(shell terraform -chdir=infra output -raw qdrant_endpoint 2>/dev/null) \
 	 QDRANT_API_KEY=$(shell terraform -chdir=infra output -raw qdrant_api_key 2>/dev/null) \
+	 GCS_BUCKET_NAME=$(shell terraform -chdir=infra output -raw gcs_bucket_name 2>/dev/null) \
 	 uv run pytest tests/integration/ -v
 
 .PHONY: test-e2e
@@ -53,6 +54,23 @@ plan:
 .PHONY: apply
 apply:
 	@terraform -chdir=infra apply
+
+.PHONY: upload-docs
+upload-docs:
+	@# data/ 内のドキュメントを GCS バケットにアップロードする（Increment 6）。
+	@# バケット名は terraform output から取得する。
+	@gcloud storage cp data/*.pdf data/*.csv \
+		gs://$(shell terraform -chdir=infra output -raw gcs_bucket_name 2>/dev/null)/
+
+.PHONY: run-ingestion
+run-ingestion:
+	@# Cloud Run Job を手動実行し、GCS のドキュメントから ES/Qdrant インデックスを作成する（Increment 6）。
+	@# --wait: ジョブの完了（または失敗）を待ってからコマンドを返す（デフォルトは非同期）。
+	@# --region: ジョブがデプロイされたリージョンを指定する。
+	@gcloud run jobs execute \
+		$(shell terraform -chdir=infra output -raw ingestion_job_name 2>/dev/null) \
+		--region asia-northeast1 \
+		--wait
 
 .PHONY: deploy
 deploy:
