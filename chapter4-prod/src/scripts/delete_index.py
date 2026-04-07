@@ -17,7 +17,7 @@ def delete_qdrant_index(qdrant_client: QdrantClient, collection_name: str) -> No
 
     if qdrant_client.collection_exists(collection_name=collection_name):
         # qdrantでインデックスを削除
-        qdrant_client.delete_collection("documents")
+        qdrant_client.delete_collection(collection_name)
         print(f"Collection '{collection_name}' has been deleted.")
     else:
         print(f"Collection '{collection_name}' does not exist.")
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         qdrant_kwargs["api_key"] = settings.qdrant_api_key
     qdrant_client = QdrantClient(**qdrant_kwargs)
 
-    index_name = "documents"
+    index_name = settings.index_name
 
     delete_es_index(es=es, index_name=index_name)
 

@@ -3,6 +3,9 @@
 GCS バケットにドキュメントをアップロードし、Cloud Run Job を手動実行して
 インデックスが作成されることを確認する。
 
+テスト専用のインデックス名（test-documents-<uuid>）を使用して Cloud Run Job を実行するため、
+本番の "documents" インデックスには影響しない。
+
 前提条件:
   - `terraform apply` を infra/ で実行済みであること
   - Docker イメージが Artifact Registry に push 済みであること
@@ -21,16 +24,17 @@ GCS バケットにドキュメントをアップロードし、Cloud Run Job �
 import os
 import subprocess
 import tempfile
+import uuid
 
 import pytest
 from elasticsearch import Elasticsearch
 from google.cloud import storage as gcs_storage
 from qdrant_client import QdrantClient
 
-# テストで使用するインデックス/コレクション名。
-# 本番と同じ "documents" を使う（Job が固定名を使用するため）。
-# テスト後にクリーンアップする。
-INDEX_NAME = "documents"
+# テスト専用のインデックス/コレクション名。実行ごとに一意な名前を生成し、
+# 本番の "documents" インデックスと衝突しないようにする。
+# test_search_cloud.py と同じパターン。
+TEST_INDEX_NAME = f"test-documents-{uuid.uuid4().hex[:8]}"
 
 # テスト用にアップロードする小さなサンプル CSV（Q&A 形式）
 _SAMPLE_CSV_CONTENT = """question,answer
@@ -87,7 +91,9 @@ class TestIngestionPipeline:
     def test_upload_and_ingest(self, gcs_bucket_name, es_client, qdrant_client_cloud):
         """テスト用 CSV を GCS にアップロードし、Job を実行してインデックスが作成されることを確認する。
 
-        テスト後に GCS オブジェクト・ES インデックス・Qdrant コレクションをクリーンアップする。
+        テスト専用インデックス名（TEST_INDEX_NAME）を Cloud Run Job に渡して実行するため、
+        本番の "documents" インデックスは変更されない。
+        テスト後に GCS オブジェクト・テスト用 ES インデックス・Qdrant コレクションをクリーンアップする。
         """
         uploaded_blob_name = "test_ingestion_sample.csv"
         gcs_client = gcs_storage.Client()
@@ -105,6 +111,10 @@ class TestIngestionPipeline:
 
             # 2. Cloud Run Job を実行する（gcloud CLI）
             # --wait: ジョブの完了または失敗まで待機する（非同期にしない）
+            # --args: この execution 限定で create_index.py に CLI 引数を渡す。
+            #   Cloud Run では command（ENTRYPOINT）の後に args（CMD）が結合されて実行される。
+            #   つまり "python -m src.scripts.create_index --index-name <name>" として動く。
+            #   Job 定義自体は変更されず、本番インデックス名（"documents"）は維持される。
             result = subprocess.run(
                 [
                     "gcloud",
@@ -114,6 +124,7 @@ class TestIngestionPipeline:
                     "helpdesk-ingestion",
                     "--region",
                     "asia-northeast1",
+                    f"--args=--index-name,{TEST_INDEX_NAME}",
                     "--wait",
                 ],
                 capture_output=True,
@@ -124,24 +135,27 @@ class TestIngestionPipeline:
             print("gcloud stderr:", result.stderr)
             assert result.returncode == 0, f"Cloud Run Job が失敗しました: {result.stderr}"
 
-            # 3. ES に "documents" インデックスが存在し、ドキュメントが含まれることを確認する
-            assert es_client.indices.exists(index=INDEX_NAME), f"ES インデックス {INDEX_NAME!r} が存在しません"
-            es_client.indices.refresh(index=INDEX_NAME)
-            count = es_client.count(index=INDEX_NAME)
-            assert count["count"] > 0, f"ES インデックス {INDEX_NAME!r} にドキュメントがありません"
-            print(f"ES index {INDEX_NAME!r} has {count['count']} documents")
+            # 3. ES にテスト用インデックスが存在し、ドキュメントが含まれることを確認する
+            assert es_client.indices.exists(index=TEST_INDEX_NAME), (
+                f"ES インデックス {TEST_INDEX_NAME!r} が存在しません"
+            )
+            es_client.indices.refresh(index=TEST_INDEX_NAME)
+            count = es_client.count(index=TEST_INDEX_NAME)
+            assert count["count"] > 0, f"ES インデックス {TEST_INDEX_NAME!r} にドキュメントがありません"
+            print(f"ES index {TEST_INDEX_NAME!r} has {count['count']} documents")
 
-            # 4. Qdrant に "documents" コレクションが存在し、ポイントが含まれることを確認する
+            # 4. Qdrant にテスト用コレクションが存在し、ポイントが含まれることを確認する
             assert qdrant_client_cloud.collection_exists(
-                collection_name=INDEX_NAME
-            ), f"Qdrant コレクション {INDEX_NAME!r} が存在しません"
-            collection_info = qdrant_client_cloud.get_collection(collection_name=INDEX_NAME)
+                collection_name=TEST_INDEX_NAME
+            ), f"Qdrant コレクション {TEST_INDEX_NAME!r} が存在しません"
+            collection_info = qdrant_client_cloud.get_collection(collection_name=TEST_INDEX_NAME)
             # points_count: コレクション内のポイント数
-            assert collection_info.points_count > 0, f"Qdrant コレクション {INDEX_NAME!r} にポイントがありません"
-            print(f"Qdrant collection {INDEX_NAME!r} has {collection_info.points_count} points")
+            assert collection_info.points_count > 0, f"Qdrant コレクション {TEST_INDEX_NAME!r} にポイントがありません"
+            print(f"Qdrant collection {TEST_INDEX_NAME!r} has {collection_info.points_count} points")
 
         finally:
-            # クリーンアップ: GCS オブジェクト、ES インデックス、Qdrant コレクションを削除する
+            # クリーンアップ: GCS オブジェクト、テスト用 ES インデックス、Qdrant コレクションを削除する
+            # 本番の "documents" インデックスは削除しない。
             try:
                 blob.delete()
                 print(f"Deleted GCS object: gs://{gcs_bucket_name}/{uploaded_blob_name}")
@@ -149,13 +163,13 @@ class TestIngestionPipeline:
                 print(f"GCS クリーンアップ失敗（無視）: {e}")
 
             try:
-                es_client.indices.delete(index=INDEX_NAME, ignore=[404])
-                print(f"Deleted ES index: {INDEX_NAME}")
+                es_client.indices.delete(index=TEST_INDEX_NAME, ignore=[404])
+                print(f"Deleted ES index: {TEST_INDEX_NAME}")
             except Exception as e:
                 print(f"ES クリーンアップ失敗（無視）: {e}")
 
             try:
-                qdrant_client_cloud.delete_collection(collection_name=INDEX_NAME)
-                print(f"Deleted Qdrant collection: {INDEX_NAME}")
+                qdrant_client_cloud.delete_collection(collection_name=TEST_INDEX_NAME)
+                print(f"Deleted Qdrant collection: {TEST_INDEX_NAME}")
             except Exception as e:
                 print(f"Qdrant クリーンアップ失敗（無視）: {e}")

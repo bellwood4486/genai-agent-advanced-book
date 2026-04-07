@@ -36,8 +36,8 @@ def search_xyz_manual(keywords: str) -> list[SearchOutput]:
         es_kwargs["basic_auth"] = (settings.elastic_username, settings.elastic_password)
     es = Elasticsearch(**es_kwargs)
 
-    # 検索対象のインデックスを指定
-    index_name = "documents"
+    # 検索対象のインデックスを指定。INDEX_NAME 環境変数で上書き可能（デフォルト: "documents"）。
+    index_name = settings.index_name
 
     # 検索クエリを作成。'content' フィールドに対してキーワードで全文検索を行う
     keyword_query = {"query": {"match": {"content": keywords}}}

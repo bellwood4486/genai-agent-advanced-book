@@ -20,4 +20,9 @@ class Settings(BaseSettings):
     # 未設定（None）の場合はローカルの data/ ディレクトリを使用する（ローカル開発用）。
     gcs_bucket_name: str | None = None
 
+    # インデックス/コレクション名。デフォルトは "documents"（本番用）。
+    # インテグレーションテスト時はテスト専用の一意な名前（例: "test-documents-abc12345"）を
+    # INDEX_NAME 環境変数で渡すことで、本番インデックスと衝突させずにテストできる。
+    index_name: str = "documents"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

@@ -39,8 +39,9 @@ def search_xyz_qa(query: str) -> list[SearchOutput]:
         .embedding
     )
 
+    # 検索対象のコレクションを指定。INDEX_NAME 環境変数で上書き可能（デフォルト: "documents"）。
     search_results = qdrant_client.query_points(
-        collection_name="documents", query=query_vector, limit=MAX_SEARCH_RESULTS
+        collection_name=settings.index_name, query=query_vector, limit=MAX_SEARCH_RESULTS
     ).points
 
     logger.info(f"Search results: {len(search_results)} hits")

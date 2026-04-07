@@ -73,8 +73,17 @@
 - [x] `modules/ingestion/` — Cloud Run Job定義
 - [x] `google-cloud-storage`を依存に追加
 - [x] `create_index.py`をGCS読み取り対応にリファクタ
-- [ ] `terraform apply` 成功
-- [ ] `pytest tests/integration/test_ingestion.py` 全通過（GCSアップロード → Job実行 → インデックス確認）
+- [x] `terraform apply` 成功
+- [x] `pytest tests/integration/test_ingestion.py` 全通過
+
+### テスト分離対応（追加）
+- [x] `src/configs.py` に `index_name` 追加（`INDEX_NAME` env、デフォルト `"documents"`）
+- [x] `create_index.py` / `delete_index.py` / 検索ツール2本を `settings.index_name` 対応
+- [x] `create_index.py` に `--index-name` CLI 引数追加（argparse）
+- [x] `test_ingestion.py` をテスト専用インデックス名（`test-documents-<uuid>`）で実行するよう変更（`--args` で Job に渡す）
+- [x] `delete_index.py` の Qdrant ハードコードバグ修正
+- [x] `pytest tests/integration/test_ingestion.py` 全通過（本番 `documents` インデックス非破壊を確認）
+- [x] `pytest tests/e2e/test_cloud_run.py` 全通過（テスト後も Cloud Run Service が応答できる）（GCSアップロード → Job実行 → インデックス確認）
 
 ## Increment 7: Eventarc自動トリガー
 - [ ] `google_eventarc_trigger`定義（GCS finalized → Cloud Run Job）
