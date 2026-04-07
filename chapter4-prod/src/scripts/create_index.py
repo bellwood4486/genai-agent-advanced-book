@@ -1,3 +1,4 @@
+import argparse
 import os
 import tempfile
 from glob import glob
@@ -195,7 +196,18 @@ def download_from_gcs(bucket_name: str, local_dir: str) -> None:
 
 
 if __name__ == "__main__":
+    # --index-name を CLI 引数として受け取れるようにする。
+    # Cloud Run Job の gcloud run jobs execute --args="--index-name,<name>" で
+    # 実行ごとに上書きできる。未指定時は settings.index_name（環境変数 INDEX_NAME、
+    # デフォルト "documents"）にフォールバックする。
+    # テスト時はこの引数でテスト専用インデックス名を渡して本番インデックスと分離する。
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--index-name", default=None, help="インデックス/コレクション名")
+    args = parser.parse_args()
+
     settings = Settings()
+    # CLI 引数 > 環境変数（settings.index_name）の優先順位で決定する
+    index_name = args.index_name if args.index_name is not None else settings.index_name
 
     # GCS_BUCKET_NAME が設定されていれば GCS からダウンロード、
     # 未設定ならローカルの data/ ディレクトリを使う（ローカル開発との後方互換）。
@@ -219,7 +231,7 @@ if __name__ == "__main__":
         qdrant_kwargs["api_key"] = settings.qdrant_api_key
     qdrant_client = QdrantClient(**qdrant_kwargs)
 
-    index_name = "documents"
+    print(f"Using index name: {index_name}")
     print(f"Creating index for keyword search {index_name}")
     create_keyword_search_index(es, index_name)
     print("--------------------------------")
