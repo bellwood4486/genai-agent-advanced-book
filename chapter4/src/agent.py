@@ -5,6 +5,7 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
 from langgraph.pregel import Pregel
+from langsmith.wrappers import wrap_openai
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
@@ -56,7 +57,7 @@ class HelpDeskAgent:
         self.tools = tools
         self.tool_map = {tool.name: tool for tool in tools}
         self.prompts = prompts
-        self.client = OpenAI(api_key=self.settings.openai_api_key)
+        self.client = wrap_openai(OpenAI(api_key=self.settings.openai_api_key))
 
     def create_plan(self, state: AgentState) -> dict:
         """計画を作成する
