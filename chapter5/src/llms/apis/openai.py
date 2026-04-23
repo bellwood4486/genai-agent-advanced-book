@@ -1,13 +1,16 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
+from langsmith.wrappers import wrap_openai
 from openai import OpenAI
 from pydantic import BaseModel
 
 from src.llms.models.llm_response import LLMResponse
 
 
-load_dotenv()
+_ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
+load_dotenv(_ENV_PATH, override=False)
 
 # https://openai.com/api/pricing/ を参照されたい
 COST = {
@@ -33,7 +36,7 @@ def generate_response(
 ) -> LLMResponse:
     assert model in COST, f"Invalid model name: {model}"
     content_idx = 1 if model.startswith(("o1", "o3")) else 0
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = wrap_openai(OpenAI(api_key=os.getenv("OPENAI_API_KEY")))
     # LLM呼び出し
     if response_format is None:
         # Chat Completion
