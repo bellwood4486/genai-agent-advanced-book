@@ -212,7 +212,8 @@ class ArxivSearcher(Searcher):
             logger.info(f"Searching for papers: {full_url}")
 
             feed = feedparser.parse(full_url)
-            entries = feed.entries
+            # arXiv API エラーエントリ（id に '/abs/' が含まれない）を除外する
+            entries = [e for e in feed.entries if "/abs/" in getattr(e, "id", "")]
 
             papers = [
                 ArxivPaper(
@@ -228,8 +229,8 @@ class ArxivSearcher(Searcher):
                         "",
                     ),
                     abstract=entry.summary.replace("\n", " "),
-                    published=datetime.datetime(*entry.published_parsed[:6]),
-                    updated=datetime.datetime(*entry.updated_parsed[:6]),
+                    published=_parsed_to_datetime(getattr(entry, "published_parsed", None)),
+                    updated=_parsed_to_datetime(getattr(entry, "updated_parsed", None)),
                     version=int(entry.id.split("/")[-1].split("v")[-1]),
                     authors=[
                         author.get("name", "") for author in entry.get("authors", [])
@@ -282,6 +283,11 @@ class ArxivSearcher(Searcher):
         return papers
 
 
+def _parsed_to_datetime(parsed: Optional[tuple]) -> Optional[datetime.datetime]:
+    if not parsed:
+        return None
+    return datetime.datetime(*parsed[:6])
+
 def main():
     from arxiv_researcher.settings import settings
 
@@ -294,7 +300,7 @@ def main():
     for i, paper in enumerate(results, 1):
         print(f"\n{i}. Title: {paper.title}")
         print(f"   Authors: {', '.join(paper.authors)}")
-        print(f"   Summary: {paper.summary[:500]}...")
+        print(f"   Abstract: {paper.abstract[:500]}...")
         print(f"   arXiv ID: {paper.id}")
         print(f"   PDF Link: {paper.pdf_link}")
         print(f"   Relevance Score: {paper.relevance_score:.4f}")
